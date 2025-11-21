@@ -24,7 +24,7 @@ use crate::fdox::fdempty_message;
 
 use iced::widget::{Column, text, column, button, Row, row,
                    text_input, Radio, horizontal_space, container, scrollable, checkbox};
-use iced::{Element, Task, Length, Alignment, Color};
+use iced::{Element, Task, Length, Alignment, Color, Theme};
 
 use std::path::Path;
 // use std::process::Command as stdCommand;
@@ -34,6 +34,7 @@ fn main() -> iced::Result {
      let heightxx: f32 = 650.0;
      iced::application(MainX::title, MainX::update, MainX::view)
         .window_size((widthxx, heightxx))
+        .theme(|_| Theme::SolarizedDark)
         .run_with(MainX::new)
 
 }
@@ -86,6 +87,8 @@ enum Message {
     FdFilterChanged(Fdfilter),
     FdFileMessage(usize, FdFileMessage),
     FdGetDirItemsChk(bool),
+    FdNewoutdir(String),
+    FdChgDir2Pressed,
 }
 
 impl MainX {
@@ -116,7 +119,7 @@ impl MainX {
     }
 
     fn title(&self) -> String {
-        String::from("File dialog test")
+        String::from("Convert one directory -- no deps")
     }
 
     fn update(&mut self, message: Message) -> Task<Message>  {
@@ -189,11 +192,11 @@ impl MainX {
                let (errcode, errstr) = copypressx(self.dir_value.clone(),self.outdir_value.clone(), self.mergescrol_value.clone());
                self.msg_value = errstr.to_string();
                if errcode == 0 {
-                   println!("copy button pressed");
+//                   println!("copy button pressed");
                    let (errcodex, errstrx) = copyit(self.dir_value.clone(),self.outdir_value.clone(), self.mergescrol_value.clone());
                    self.msg_value = errstrx.to_string();
                    if errcodex == 0 {
-                       println!("copyit complete");
+//                       println!("copyit complete");
                        self.mess_color = Color::from([0.0, 1.0, 0.0]);
 //                   Task::perform(Copyx::copyit(self.dir_value.clone(),self.outdir_value.clone(), self.mergescrol_value.clone()), Message::CopyxFound)
                    } else {
@@ -268,6 +271,7 @@ impl MainX {
                 self.fdgetdiritems = chked;
                 Task::none()
             } 
+            Message::FdNewoutdir(value) => { self.fdoutdir_value = value; Task::none() }
             Message::FdChgDirPressed => {
                 let files_selected = self.fdfiles.iter().filter(|fileitem| fileitem.fdcompleted).count();
                 if files_selected < 1 {
@@ -308,6 +312,28 @@ impl MainX {
                          } else {
                             self.mess_color = Color::from([1.0, 0.0, 0.0]);
                          }
+                    }
+                }
+                Task::none()
+            }
+            Message::FdChgDir2Pressed => {
+                if !Path::new(&self.fdoutdir_value).exists() {
+                    self.msg_value = format!("out directory {} does not exist", self.fdoutdir_value);
+                    self.mess_color = Color::from([1.0, 0.0, 0.0]);
+                } else {
+                    let (errcd, errstr, newdir, listitems) = get_dirlistc(self.fdoutdir_value.clone(), self.fdgetdiritems.clone());
+                    self.msg_value = errstr.to_string();
+                    if errcd == 0 {
+                        self.fdfiles.clear();                         
+                        self.fdoutdir_value = newdir.to_string();
+                        let listitemlen = listitems.len();
+                        let newtoi = listitemlen as i32 ;
+                        for indexi in 0..newtoi {
+                             self.fdfiles.push(FdFile::new(listitems[indexi as usize].clone()));
+                        } 
+                        self.mess_color = Color::from([0.0, 1.0, 0.0]);
+                    } else {
+                        self.mess_color = Color::from([1.0, 0.0, 0.0]);
                     }
                 }
                 Task::none()
@@ -386,7 +412,8 @@ impl MainX {
                     }
                 }
                 let mut filesrow = Row::new().spacing(5);
-                filesrow = filesrow.push(container(filescol1).padding(5).width(Length::Fixed(400.0)));
+                filesrow = filesrow.push(container(filescol1).padding(5).width(Length::Fill));
+//                filesrow = filesrow.push(container(filescol1).padding(5).width(Length::Fixed(400.0)));
 //                filesrow = filesrow.push(container(filescol1).padding(10));
 
                 let scrollable_contentf: Element<Message> =
@@ -422,11 +449,12 @@ impl MainX {
                     subshow = subshow.push(container(scrollable_contentf
                         ),
                            );
-                    subshow = subshow.push(container(row![horizontal_space(),
+                    subshow = subshow.push(container(row![
                                                                          button("Set Directory Button").on_press(Message::FdSetDirPressed),
-                                                                         text(&self.fdoutdir_value).size(15), 
-                                                                         horizontal_space(),
-                                              ].align_y(Alignment::Center).spacing(5).padding(5),
+                                                                         text_input("No directory ...", &self.fdoutdir_value).on_input(Message::FdNewoutdir).padding(5).size(15),
+                                                                         button("Change Directory").on_press(Message::FdChgDir2Pressed),
+                                                                         
+                                              ].align_y(Alignment::Center).spacing(20).padding(5),
                         ));
             }
 

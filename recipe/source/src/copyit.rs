@@ -2,7 +2,7 @@ use std::path::Path;
 use std::process::Command as stdCommand;
 pub fn copyit (dir_value: String, outdir_value: String, mergescrol_value: String) -> (u32, String) {
      let mut errcode:u32 = 0;
-     println!("got into copyit async");
+//     println!("got into copyit async");
      let mut errstring  = " ".to_string();
      let mut bolok = true;
      let mut numrow = 0;
@@ -39,7 +39,7 @@ pub fn copyit (dir_value: String, outdir_value: String, mergescrol_value: String
               spcmd.arg(&fullto);
               match spcmd.spawn() {
                   Ok(mut _child) => {
-                         println!("{:?} spawn ok", spcmd);
+//                         println!("{:?} spawn ok", spcmd);
 //                  Ok(mut child) => match child.wait() {
 //                                Ok(exit_status) => {
 //                                    if !exit_status.success() {
@@ -62,7 +62,7 @@ pub fn copyit (dir_value: String, outdir_value: String, mergescrol_value: String
               outcmd.arg(&fullto);
               match outcmd.output() {
                   Ok(_) => {
-                         println!("{:?} output ok", outcmd);
+//                         println!("{:?} output ok", outcmd);
 //                  Ok(mut child) => match child.wait() {
 //                                Ok(exit_status) => {
 //                                    if !exit_status.success() {
